@@ -135,7 +135,7 @@ async def run_async_process(cmd, **kwargs):
     proc = await asyncio.create_subprocess_exec(*cmd, **kwargs)
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
-        raise RuntimeError(str(cmd) + " exited with " + str(proc.returncode))
+        raise RuntimeError(f"{str(cmd)} exited with {str(proc.returncode)}")
     return stdout, stderr
 
 
@@ -178,7 +178,7 @@ class BrowserApp(LabApp):
     test_browser = Bool(True)
 
     def initialize_settings(self):
-        self.settings.setdefault("page_config_data", dict())
+        self.settings.setdefault("page_config_data", {})
         self.settings["page_config_data"]["browserTest"] = True
         self.settings["page_config_data"]["buildAvailable"] = False
         self.settings["page_config_data"]["exposeAppInBrowser"] = True

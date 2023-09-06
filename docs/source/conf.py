@@ -111,16 +111,16 @@ def build_api_docs(out_dir: Path):
     root = docs.parent
     docs_api = docs / "api"
     api_index = docs_api / "index.html"
-    # is this an okay way to specify jlpm
-    # without installing jupyterlab first?
-    jlpm = ["node", str(root / "jupyterlab" / "staging" / "yarn.js")]
-
     if api_index.exists():
         # avoid rebuilding docs because it takes forever
         # `make clean` to force a rebuild
         print(f"already have {api_index!s}")
     else:
         print("Building jupyterlab API docs")
+        # is this an okay way to specify jlpm
+        # without installing jupyterlab first?
+        jlpm = ["node", str(root / "jupyterlab" / "staging" / "yarn.js")]
+
         check_call(jlpm, cwd=str(root))
         check_call(jlpm + ["build:packages"], cwd=str(root))
         check_call(jlpm + ["docs"], cwd=str(root))
@@ -204,10 +204,7 @@ def document_commands_list(temp_folder: Path) -> None:
 
     for command in sorted(commands_list, key=lambda c: c["id"]):
         for key in ("id", "label", "caption"):
-            if key not in command:
-                command[key] = ""
-            else:
-                command[key] = command[key].replace("\n", " ")
+            command[key] = "" if key not in command else command[key].replace("\n", " ")
         shortcuts = command.get("shortcuts", [])
         command["shortcuts"] = (
             "<kbd>" + "</kbd>, <kbd>".join(shortcuts) + "</kbd>" if len(shortcuts) else ""

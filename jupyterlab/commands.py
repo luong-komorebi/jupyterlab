@@ -256,11 +256,10 @@ def ensure_app(app_dir):
     if osp.exists(pjoin(app_dir, "static", "index.html")):
         return
 
-    msgs = [
-        'JupyterLab application assets not found in "%s"' % app_dir,
+    return [
+        f'JupyterLab application assets not found in "{app_dir}"',
         "Please run `jupyter lab build` or use a different app directory",
     ]
-    return msgs
 
 
 def watch_packages(logger=None):
@@ -636,7 +635,7 @@ class _AppHandler(object):
             config = self._read_build_config()
             uninstalled = config.get("uninstalled_core_extensions", [])
             if extension in uninstalled:
-                self.logger.info("Installing core extension %s" % extension)
+                self.logger.info(f"Installing core extension {extension}")
                 uninstalled.remove(extension)
                 config["uninstalled_core_extensions"] = uninstalled
                 self._write_build_config(config)
@@ -744,7 +743,7 @@ class _AppHandler(object):
         logger = self.logger
         info = self.info
 
-        logger.info("JupyterLab v%s" % info["version"])
+        logger.info(f'JupyterLab v{info["version"]}')
 
         if info["federated_extensions"] or info["extensions"]:
             info["compat_errors"] = self._get_extension_compat()
@@ -757,38 +756,35 @@ class _AppHandler(object):
             self._list_extensions(info, "app")
             self._list_extensions(info, "sys")
 
-        local = info["local_extensions"]
-        if local:
+        if local := info["local_extensions"]:
             logger.info("\n   local extensions:")
             for name in sorted(local):
-                logger.info("        %s: %s" % (name, local[name]))
+                logger.info(f"        {name}: {local[name]}")
 
-        linked_packages = info["linked_packages"]
-        if linked_packages:
+        if linked_packages := info["linked_packages"]:
             logger.info("\n   linked packages:")
             for key in sorted(linked_packages):
                 source = linked_packages[key]["source"]
-                logger.info("        %s: %s" % (key, source))
+                logger.info(f"        {key}: {source}")
 
-        uninstalled_core = info["uninstalled_core"]
-        if uninstalled_core:
+        if uninstalled_core := info["uninstalled_core"]:
             logger.info("\nUninstalled core extensions:")
-            [logger.info("    %s" % item) for item in sorted(uninstalled_core)]
+            [logger.info(f"    {item}") for item in sorted(uninstalled_core)]
 
         all_exts = (
             list(info["federated_extensions"])
             + list(info["extensions"])
             + list(info["core_extensions"])
         )
-        # Ignore disabled extensions that are not installed
-        disabled = [i for i in info["disabled"] if i.partition(":")[0] in all_exts]
-        if disabled:
+        if disabled := [
+            i for i in info["disabled"] if i.partition(":")[0] in all_exts
+        ]:
             logger.info("\nDisabled extensions:")
             for item in sorted(disabled):
                 # Show that all plugins will be disabled if the whole extension matches
                 if item in all_exts:
                     item += " (all plugins)"
-                logger.info("    %s" % item)
+                logger.info(f"    {item}")
 
         # Here check if modules are improperly shadowed
         improper_shadowed = []
@@ -802,12 +798,11 @@ class _AppHandler(object):
             logger.info(
                 "\nThe following source extensions are overshadowed by older prebuilt extensions:"
             )
-            [logger.info("    %s" % name) for name in sorted(improper_shadowed)]
+            [logger.info(f"    {name}") for name in sorted(improper_shadowed)]
 
-        messages = self.build_check(fast=True)
-        if messages:
+        if messages := self.build_check(fast=True):
             logger.info("\nBuild recommended, please run `jupyter lab build`:")
-            [logger.info("    %s" % item) for item in messages]
+            [logger.info(f"    {item}") for item in messages]
 
     def build_check(self, fast=None):
         """Determine whether JupyterLab should be built.
@@ -851,14 +846,14 @@ class _AppHandler(object):
                 if ext in shadowed_exts:
                     continue
                 if ext not in old_jlab[ext_type]:
-                    messages.append("%s needs to be included in build" % ext)
+                    messages.append(f"{ext} needs to be included in build")
 
             # Extensions that were removed.
             for ext in old_jlab[ext_type]:
                 if ext in shadowed_exts:
                     continue
                 if ext not in new_jlab[ext_type]:
-                    messages.append("%s needs to be removed from build" % ext)
+                    messages.append(f"{ext} needs to be removed from build")
 
         # Look for mismatched dependencies
         src_pkg_dir = pjoin(REPO_ROOT, "packages")
@@ -880,7 +875,7 @@ class _AppHandler(object):
                 continue
             dname = pjoin(app_dir, "extensions")
             if self._check_local(name, source, dname):
-                messages.append("%s content changed" % name)
+                messages.append(f"{name} content changed")
 
         # Look for updated linked packages.
         for (name, item) in linked.items():
@@ -888,7 +883,7 @@ class _AppHandler(object):
                 continue
             dname = pjoin(app_dir, "staging", "linked_packages")
             if self._check_local(name, item["source"], dname):
-                messages.append("%s content changed" % name)
+                messages.append(f"{name} content changed")
 
         return messages
 
@@ -907,13 +902,11 @@ class _AppHandler(object):
                 .get("uninstallInstructions", None)
             ):
                 logger.error(
-                    "JupyterLab cannot uninstall this extension. %s"
-                    % info["federated_extensions"][name]["install"]["uninstallInstructions"]
+                    f'JupyterLab cannot uninstall this extension. {info["federated_extensions"][name]["install"]["uninstallInstructions"]}'
                 )
             else:
                 logger.error(
-                    "JupyterLab cannot uninstall %s since it was installed outside of JupyterLab. Use the same method used to install this extension to uninstall this extension."
-                    % name
+                    f"JupyterLab cannot uninstall {name} since it was installed outside of JupyterLab. Use the same method used to install this extension to uninstall this extension."
                 )
             return False
 
@@ -922,7 +915,7 @@ class _AppHandler(object):
             config = self._read_build_config()
             uninstalled = config.get("uninstalled_core_extensions", [])
             if name not in uninstalled:
-                logger.info("Uninstalling core extension %s" % name)
+                logger.info(f"Uninstalling core extension {name}")
                 uninstalled.append(name)
                 config["uninstalled_core_extensions"] = uninstalled
                 self._write_build_config(config)
@@ -934,7 +927,7 @@ class _AppHandler(object):
         for (extname, data) in info["extensions"].items():
             path = data["path"]
             if extname == name:
-                msg = "Uninstalling %s from %s" % (name, osp.dirname(path))
+                msg = f"Uninstalling {name} from {osp.dirname(path)}"
                 logger.info(msg)
                 os.remove(path)
                 # Handle local extensions.
@@ -945,7 +938,7 @@ class _AppHandler(object):
                     self._write_build_config(config)
                 return True
 
-        logger.warning('No labextension named "%s" installed' % name)
+        logger.warning(f'No labextension named "{name}" installed')
         return False
 
     def uninstall_all_extensions(self):
@@ -979,7 +972,7 @@ class _AppHandler(object):
         Returns `True` if a rebuild is recommended, `False` otherwise.
         """
         if name not in self.info["extensions"]:
-            self.logger.warning('No labextension named "%s" installed' % name)
+            self.logger.warning(f'No labextension named "{name}" installed')
             return False
         return self._update_extension(name)
 
@@ -990,20 +983,20 @@ class _AppHandler(object):
         """
         data = self.info["extensions"][name]
         if data["alias_package_source"]:
-            self.logger.warning("Skipping updating pinned extension '%s'." % name)
+            self.logger.warning(f"Skipping updating pinned extension '{name}'.")
             return False
         try:
             latest = self._latest_compatible_package_version(name)
         except URLError:
             return False
         if latest is None:
-            self.logger.warning("No compatible version found for %s!" % (name,))
+            self.logger.warning(f"No compatible version found for {name}!")
             return False
         if latest == data["version"]:
             self.logger.info("Extension %r already up to date" % name)
             return False
-        self.logger.info("Updating %s to version %s" % (name, latest))
-        return self.install_extension("%s@%s" % (name, latest))
+        self.logger.info(f"Updating {name} to version {latest}")
+        return self.install_extension(f"{name}@{latest}")
 
     def link_package(self, path):
         """Link a package at the given path.
@@ -1012,8 +1005,7 @@ class _AppHandler(object):
         """
         path = _normalize_path(path)
         if not osp.exists(path) or not osp.isdir(path):
-            msg = 'Cannot install "%s" only link local directories'
-            raise ValueError(msg % path)
+            raise ValueError(f'Cannot install "{path}" only link local directories')
 
         with TemporaryDirectory() as tempdir:
             info = self._extract_package(path, tempdir)
@@ -1026,7 +1018,7 @@ class _AppHandler(object):
         self.logger.warning(
             "Installing %s as a linked package because it does not have extension metadata:", path
         )
-        [self.logger.warning("   %s" % m) for m in messages]
+        [self.logger.warning(f"   {m}") for m in messages]
 
         # Add to metadata.
         config = self._read_build_config()
@@ -1065,7 +1057,7 @@ class _AppHandler(object):
                 os.remove(path)
 
         if not found:
-            raise ValueError("No linked package for %s" % path)
+            raise ValueError(f"No linked package for {path}")
 
         self._write_build_config(config)
         return True
@@ -1105,7 +1097,7 @@ class _AppHandler(object):
             return self._check_core_extension(extension, info, check_installed_only)
 
         if extension in info["linked_packages"]:
-            self.logger.info("%s:%s" % (extension, GREEN_ENABLED))
+            self.logger.info(f"{extension}:{GREEN_ENABLED}")
             return True
 
         return self._check_common_extension(extension, info, check_installed_only)
@@ -1113,37 +1105,36 @@ class _AppHandler(object):
     def _check_core_extension(self, extension, info, check_installed_only):
         """Check if a core extension is enabled or disabled"""
         if extension in info["uninstalled_core"]:
-            self.logger.info("%s:%s" % (extension, RED_X))
+            self.logger.info(f"{extension}:{RED_X}")
             return False
         if check_installed_only:
-            self.logger.info("%s: %s" % (extension, GREEN_OK))
+            self.logger.info(f"{extension}: {GREEN_OK}")
             return True
         if extension in info["disabled_core"]:
-            self.logger.info("%s: %s" % (extension, RED_DISABLED))
+            self.logger.info(f"{extension}: {RED_DISABLED}")
             return False
-        self.logger.info("%s:%s" % (extension, GREEN_ENABLED))
+        self.logger.info(f"{extension}:{GREEN_ENABLED}")
         return True
 
     def _check_common_extension(self, extension, info, check_installed_only):
         """Check if a common (non-core) extension is enabled or disabled"""
         if extension not in info["extensions"]:
-            self.logger.info("%s:%s" % (extension, RED_X))
+            self.logger.info(f"{extension}:{RED_X}")
             return False
 
-        errors = self._get_extension_compat()[extension]
-        if errors:
-            self.logger.info("%s:%s (compatibility errors)" % (extension, RED_X))
+        if errors := self._get_extension_compat()[extension]:
+            self.logger.info(f"{extension}:{RED_X} (compatibility errors)")
             return False
 
         if check_installed_only:
-            self.logger.info("%s: %s" % (extension, GREEN_OK))
+            self.logger.info(f"{extension}: {GREEN_OK}")
             return True
 
         if _is_disabled(extension, info["disabled"]):
-            self.logger.info("%s: %s" % (extension, RED_DISABLED))
+            self.logger.info(f"{extension}: {RED_DISABLED}")
             return False
 
-        self.logger.info("%s:%s" % (extension, GREEN_ENABLED))
+        self.logger.info(f"{extension}:{GREEN_ENABLED}")
         return True
 
     def _get_app_info(self):
@@ -1202,11 +1193,9 @@ class _AppHandler(object):
 
         info["disabled"] = disabled
 
-        disabled_core = []
-        for key in info["core_extensions"]:
-            if key in info["disabled"]:
-                disabled_core.append(key)
-
+        disabled_core = [
+            key for key in info["core_extensions"] if key in info["disabled"]
+        ]
         info["disabled_core"] = disabled_core
 
     def _populate_staging(self, name=None, version=None, static_url=None, clean=False):
@@ -1225,7 +1214,7 @@ class _AppHandler(object):
         if splice_source:
             self.logger.debug("Splicing dev packages into app directory.")
             source_dir = DEV_DIR
-            version = __version__ + "-spliced"
+            version = f"{__version__}-spliced"
         else:
             source_dir = pjoin(HERE, "staging")
 
@@ -1416,7 +1405,7 @@ class _AppHandler(object):
                     continue
                 if ext is True:
                     ext = ""
-                jlab[item + "s"][key] = ext
+                jlab[f"{item}s"][key] = ext
 
                 # Add metadata for the extension
                 data["jupyterlab"]["extensionMetadata"][key] = jlab_data
@@ -1559,7 +1548,7 @@ class _AppHandler(object):
             data = read_package(path)
             name = data["name"]
             if name not in info:
-                self.logger.warning("Removing orphaned linked package %s" % name)
+                self.logger.warning(f"Removing orphaned linked package {name}")
                 os.remove(path)
                 continue
             item = info[name]
@@ -1590,15 +1579,15 @@ class _AppHandler(object):
         """List the extensions of a given type."""
         self._ensure_disabled_info()
         logger = self.logger
-        names = info["%s_extensions" % ext_type]
+        names = info[f"{ext_type}_extensions"]
         if not names:
             return
 
-        dname = info["%s_dir" % ext_type]
+        dname = info[f"{ext_type}_dir"]
 
         error_accumulator = {}
 
-        logger.info("   %s dir: %s" % (ext_type, dname))
+        logger.info(f"   {ext_type} dir: {dname}")
         for name in sorted(names):
             if name in info["federated_extensions"]:
                 continue
@@ -1607,21 +1596,16 @@ class _AppHandler(object):
             errors = info["compat_errors"][name]
             extra = ""
             if _is_disabled(name, info["disabled"]):
-                extra += " %s" % RED_DISABLED
+                extra += f" {RED_DISABLED}"
             else:
-                extra += " %s" % GREEN_ENABLED
-            if errors:
-                extra += " %s" % RED_X
-            else:
-                extra += " %s" % GREEN_OK
+                extra += f" {GREEN_ENABLED}"
+            extra += f" {RED_X}" if errors else f" {GREEN_OK}"
             if data["is_local"]:
                 extra += "*"
-            # If we have the package name in the data, this means this extension's name is the alias name
-            alias_package_source = data["alias_package_source"]
-            if alias_package_source:
-                logger.info("        %s %s v%s%s" % (name, alias_package_source, version, extra))
+            if alias_package_source := data["alias_package_source"]:
+                logger.info(f"        {name} {alias_package_source} v{version}{extra}")
             else:
-                logger.info("        %s v%s%s" % (name, version, extra))
+                logger.info(f"        {name} v{version}{extra}")
             if errors:
                 error_accumulator[name] = (version, errors)
 
@@ -1638,7 +1622,7 @@ class _AppHandler(object):
 
         error_accumulator = {}
 
-        ext_dirs = dict((p, False) for p in self.labextensions_path)
+        ext_dirs = {p: False for p in self.labextensions_path}
         for value in info["federated_extensions"].values():
             ext_dirs[value["ext_dir"]] = True
 
@@ -1654,20 +1638,16 @@ class _AppHandler(object):
                 errors = info["compat_errors"][name]
                 extra = ""
                 if _is_disabled(name, info["disabled"]):
-                    extra += " %s" % RED_DISABLED
+                    extra += f" {RED_DISABLED}"
                 else:
-                    extra += " %s" % GREEN_ENABLED
-                if errors:
-                    extra += " %s" % RED_X
-                else:
-                    extra += " %s" % GREEN_OK
+                    extra += f" {GREEN_ENABLED}"
+                extra += f" {RED_X}" if errors else f" {GREEN_OK}"
                 if data["is_local"]:
                     extra += "*"
 
-                install = data.get("install")
-                if install:
-                    extra += " (%s, %s)" % (install["packageManager"], install["packageName"])
-                logger.info("        %s v%s%s" % (name, version, extra))
+                if install := data.get("install"):
+                    extra += f' ({install["packageManager"]}, {install["packageName"]})'
+                logger.info(f"        {name} v{version}{extra}")
                 if errors:
                     error_accumulator[name] = (version, errors)
             # Add a spacer line after
@@ -1681,9 +1661,8 @@ class _AppHandler(object):
         target = pjoin(self.app_dir, "settings", "build_config.json")
         if not osp.exists(target):
             return {}
-        else:
-            with open(target) as fid:
-                return json.load(fid)
+        with open(target) as fid:
+            return json.load(fid)
 
     def _write_build_config(self, config):
         """Write the build config to the app dir."""
@@ -1704,7 +1683,7 @@ class _AppHandler(object):
 
         for name in dead:
             link_type = source.replace("_", " ")
-            msg = '**Note: Removing dead %s "%s"' % (link_type, name)
+            msg = f'**Note: Removing dead {link_type} "{name}"'
             self.logger.warning(msg)
             del data[name]
 
@@ -1725,23 +1704,19 @@ class _AppHandler(object):
         allow_fallback = "@" not in extension[1:] and not info["is_dir"]
         name = info["name"]
 
-        # Verify that the package is an extension.
-        messages = _validate_extension(data)
-        if messages:
+        if messages := _validate_extension(data):
             msg = '"%s" is not a valid extension:\n%s'
-            msg = msg % (extension, "\n".join(messages))
-            if allow_fallback:
-                try:
-                    version = self._latest_compatible_package_version(name)
-                except URLError:
-                    raise ValueError(msg)
-            else:
+            msg %= (extension, "\n".join(messages))
+            if not allow_fallback:
                 raise ValueError(msg)
 
+            try:
+                version = self._latest_compatible_package_version(name)
+            except URLError:
+                raise ValueError(msg)
         # Verify package compatibility.
         deps = data.get("dependencies", {})
-        errors = _validate_compatibility(extension, deps, self.core_data)
-        if errors:
+        if errors := _validate_compatibility(extension, deps, self.core_data):
             msg = _format_compatibility_errors(data["name"], data["version"], errors)
             if allow_fallback:
                 try:
@@ -1754,7 +1729,7 @@ class _AppHandler(object):
                     self.logger.debug("Incompatible extension:\n%s", name)
                     self.logger.debug("Found compatible version: %s", version)
                     with TemporaryDirectory() as tempdir2:
-                        return self._install_extension("%s@%s" % (name, version), tempdir2)
+                        return self._install_extension(f"{name}@{version}", tempdir2)
 
                 # Extend message to better guide the user what to do:
                 conflicts = "\n".join(msg.splitlines()[2:])
@@ -1787,21 +1762,20 @@ class _AppHandler(object):
 
         ret = self._run([which("npm"), "pack", source], cwd=tempdir)
         if ret != 0:
-            msg = '"%s" is not a valid npm package'
-            raise ValueError(msg % source)
+            raise ValueError(f'"{source}" is not a valid npm package')
 
         path = glob(pjoin(tempdir, "*.tgz"))[0]
         info["data"] = read_package(path)
         if is_dir:
             info["sha"] = sha = _tarsum(path)
-            target = path.replace(".tgz", "-%s.tgz" % sha)
+            target = path.replace(".tgz", f"-{sha}.tgz")
             shutil.move(path, target)
             info["path"] = target
         else:
             info["path"] = path
         if pin:
             old_path = info["path"]
-            new_path = pjoin(osp.dirname(old_path), "{}{}.tgz".format(PIN_PREFIX, pin))
+            new_path = pjoin(osp.dirname(old_path), f"{PIN_PREFIX}{pin}.tgz")
             shutil.move(old_path, new_path)
             info["path"] = new_path
 
@@ -1832,13 +1806,12 @@ class _AppHandler(object):
                 # skip deprecated versions
                 if "deprecated" in data:
                     self.logger.debug(
-                        "Disregarding compatible version of package as it is deprecated: %s@%s"
-                        % (name, version)
+                        f"Disregarding compatible version of package as it is deprecated: {name}@{version}"
                     )
                     continue
                 # Verify that the version is a valid extension.
                 with TemporaryDirectory() as tempdir:
-                    info = self._extract_package("%s@%s" % (name, version), tempdir)
+                    info = self._extract_package(f"{name}@{version}", tempdir)
                 if _validate_extension(info["data"]):
                     # Invalid, do not consider other versions
                     return
@@ -1875,7 +1848,7 @@ class _AppHandler(object):
                 errors = _validate_compatibility(name, deps, core_data)
                 if not errors:
                     # Found a compatible version
-                    keys.append("%s@%s" % (name, version))
+                    keys.append(f"{name}@{version}")
                     break  # break inner for
 
         versions = {}
@@ -1976,10 +1949,7 @@ def _node_check(logger):
     except Exception:
         data = CoreConfig()._data
         ver = data["engines"]["node"]
-        msg = (
-            "Please install nodejs %s before continuing. nodejs may be installed using conda or directly from the nodejs website."
-            % ver
-        )
+        msg = f"Please install nodejs {ver} before continuing. nodejs may be installed using conda or directly from the nodejs website."
         raise ValueError(msg)
 
 
@@ -2003,7 +1973,7 @@ def _yarn_config(logger):
         )
         output = output_binary.decode("utf-8")
         lines = iter(output.splitlines())
-        try:
+        with contextlib.suppress(StopIteration):
             for line in lines:
                 info = json.loads(line)
                 if info["type"] == "info":
@@ -2011,8 +1981,6 @@ def _yarn_config(logger):
                     inspect = json.loads(next(lines))
                     if inspect["type"] == "inspect":
                         configuration[key] = inspect["data"]
-        except StopIteration:
-            pass
         logger.debug("Yarn configuration loaded.")
     except subprocess.CalledProcessError as e:
         logger.error(
@@ -2105,16 +2073,16 @@ def _validate_extension(data):
         mime_extension += ".js"
 
     if extension and extension not in files:
-        messages.append('Missing extension module "%s"' % extension)
+        messages.append(f'Missing extension module "{extension}"')
 
     if mime_extension and mime_extension not in files:
-        messages.append('Missing mimeExtension module "%s"' % mime_extension)
+        messages.append(f'Missing mimeExtension module "{mime_extension}"')
 
     if themePath and not any(f.startswith(str(Path(themePath))) for f in files):
-        messages.append('themePath is empty: "%s"' % themePath)
+        messages.append(f'themePath is empty: "{themePath}"')
 
     if schemaDir and not any(f.startswith(str(Path(schemaDir))) for f in files):
-        messages.append('schemaDir is empty: "%s"' % schemaDir)
+        messages.append(f'schemaDir is empty: "{schemaDir}"')
 
     return messages
 
@@ -2131,10 +2099,8 @@ def _tarsum(input_file):
         if not member.isfile():
             continue
         f = tar.extractfile(member)
-        data = f.read(chunk_size)
-        while data:
+        while data := f.read(chunk_size):
             h.update(data)
-            data = f.read(chunk_size)
     return h.hexdigest()
 
 
@@ -2301,7 +2267,7 @@ def _format_compatibility_errors(name, version, errors):
         l1 = max(l1, len(jlab) + 1)
 
     msg = '\n"%s@%s" is not compatible with the current JupyterLab'
-    msg = msg % (name, version)
+    msg %= (name, version)
     msg += "\nConflicting Dependencies:\n"
     msg += "JupyterLab".ljust(l0)
     msg += "Extension".ljust(l1)
@@ -2448,9 +2414,9 @@ def _fetch_package_metadata(registry, name, logger):
         },
     )
     try:
-        logger.debug("Fetching URL: %s" % (req.full_url))
+        logger.debug(f"Fetching URL: {req.full_url}")
     except AttributeError:
-        logger.debug("Fetching URL: %s" % (req.get_full_url()))
+        logger.debug(f"Fetching URL: {req.get_full_url()}")
     try:
         with contextlib.closing(urlopen(req)) as response:
             return json.loads(response.read().decode("utf-8"))

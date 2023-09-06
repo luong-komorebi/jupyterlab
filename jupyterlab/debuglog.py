@@ -61,8 +61,6 @@ class DebugLogFileMixin(Configurable):
             log.removeHandler(_debug_handler)
             _debug_handler.flush()
             _debug_handler.close()
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 os.remove(log_path)
-            except FileNotFoundError:
-                pass
         log.removeHandler(_debug_handler)

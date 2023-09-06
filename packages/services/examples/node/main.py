@@ -25,7 +25,7 @@ class NodeApp(ProcessApp):
         """Get the command and kwargs to run."""
         # Run the node script with command arguments.
         config = dict(
-            baseUrl="http://localhost:{}{}".format(self.serverapp.port, self.settings["base_url"]),
+            baseUrl=f'http://localhost:{self.serverapp.port}{self.settings["base_url"]}',
             token=self.settings["token"],
         )
 

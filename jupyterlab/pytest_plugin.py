@@ -104,7 +104,7 @@ def fetch_long(http_server_client, jp_auth_header, jp_base_url):
         path_url = url_escape(url_path_join(*parts), plus=False)
         path_url = url_path_join(jp_base_url, path_url)
         params_url = urllib.parse.urlencode(params or {})
-        url = path_url + "?" + params_url
+        url = f"{path_url}?{params_url}"
         # Add auth keys to header
         headers = headers or {}
         headers.update(jp_auth_header)

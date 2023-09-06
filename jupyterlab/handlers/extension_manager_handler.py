@@ -38,7 +38,6 @@ class ExtensionHandler(APIHandler):
 
         self.set_status(200)
         if last_page is not None:
-            links = []
             queryArgs = {"page": last_page, "per_page": per_page}
             if query is not None:
                 queryArgs["query"] = query
@@ -52,7 +51,7 @@ class ExtensionHandler(APIHandler):
                     "",
                 )
             )
-            links.append(f'<{last}>; rel="last"')
+            links = [f'<{last}>; rel="last"']
             if page > 1:
                 queryArgs["page"] = max(1, page - 1)
                 prev = urlunparse(

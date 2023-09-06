@@ -30,5 +30,5 @@ class ErrorHandler(ExtensionHandlerMixin, JupyterHandler):
     @web.authenticated
     @web.removeslash
     def get(self):
-        msgs = ["<h2>%s</h2>" % msg for msg in self.messages]
+        msgs = [f"<h2>{msg}</h2>" for msg in self.messages]
         self.write(TEMPLATE % "\n".join(msgs))

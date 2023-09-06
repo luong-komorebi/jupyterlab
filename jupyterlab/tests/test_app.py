@@ -63,8 +63,7 @@ def _create_template_dir():
 
 
 def _create_static_dir():
-    static_dir = tempfile.mkdtemp(prefix="mock_static")
-    return static_dir
+    return tempfile.mkdtemp(prefix="mock_static")
 
 
 def _create_schemas_dir():

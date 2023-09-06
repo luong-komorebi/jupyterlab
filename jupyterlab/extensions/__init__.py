@@ -1,5 +1,6 @@
 """Extension manager for JupyterLab."""
 
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -18,11 +19,10 @@ if sys.version_info < (3, 10):
 else:
     from importlib.metadata import entry_points
 
-# Supported third-party services
-MANAGERS = {}
-
-for entry in entry_points(group="jupyterlab.extension_manager_v1"):
-    MANAGERS[entry.name] = entry
+MANAGERS = {
+    entry.name: entry
+    for entry in entry_points(group="jupyterlab.extension_manager_v1")
+}
 
 
 # Entry points

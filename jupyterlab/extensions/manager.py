@@ -44,8 +44,7 @@ def _build_check_info(app_options):
     status = {"install": [], "uninstall": [], "update": []}
     for msg in messages:
         for key, pattern in _message_map.items():
-            match = pattern.match(msg)
-            if match:
+            if match := pattern.match(msg):
                 status[key].append(match.group("name"))
     return status
 
@@ -378,20 +377,20 @@ class ExtensionManager(LoggingConfigurable):
         if query is not None and self._listings_cache is not None:
             listing = list(self._listings_cache)
             extensions = []
-            if self._listings_block_mode:
-                for name, ext in cache.items():
-                    if name not in listing:
-                        extensions.append(replace(ext, allowed=True))
-                    elif ext.installed_version:
-                        self.log.warning(f"Blocked extension '{name}' is installed.")
-                        extensions.append(replace(ext, allowed=False))
-            else:
-                for name, ext in cache.items():
-                    if name in listing:
-                        extensions.append(replace(ext, allowed=True))
-                    elif ext.installed_version:
-                        self.log.warning(f"Not allowed extension '{name}' is installed.")
-                        extensions.append(replace(ext, allowed=False))
+            for name, ext in cache.items():
+                if (
+                    self._listings_block_mode
+                    and name not in listing
+                    or not self._listings_block_mode
+                    and name in listing
+                ):
+                    extensions.append(replace(ext, allowed=True))
+                elif self._listings_block_mode and ext.installed_version:
+                    self.log.warning(f"Blocked extension '{name}' is installed.")
+                    extensions.append(replace(ext, allowed=False))
+                elif not self._listings_block_mode and ext.installed_version:
+                    self.log.warning(f"Not allowed extension '{name}' is installed.")
+                    extensions.append(replace(ext, allowed=False))
 
         return extensions, self._extensions_cache[query].last_page
 

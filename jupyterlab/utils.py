@@ -37,12 +37,12 @@ class deprecated(object):
 
         alt_msg = ""
         if self.alt_func is not None:
-            alt_msg = " Use ``%s`` instead." % self.alt_func
+            alt_msg = f" Use ``{self.alt_func}`` instead."
         rmv_msg = ""
         if self.removed_version is not None:
-            rmv_msg = " and will be removed in version %s" % self.removed_version
+            rmv_msg = f" and will be removed in version {self.removed_version}"
 
-        msg = "Function ``%s`` is deprecated" % func.__name__ + rmv_msg + "." + alt_msg
+        msg = f"Function ``{func.__name__}`` is deprecated{rmv_msg}.{alt_msg}"
 
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
@@ -60,7 +60,7 @@ class deprecated(object):
             return func(*args, **kwargs)
 
         # modify doc string to display deprecation warning
-        doc = "**Deprecated function**." + alt_msg
+        doc = f"**Deprecated function**.{alt_msg}"
         if wrapped.__doc__ is None:
             wrapped.__doc__ = doc
         else:

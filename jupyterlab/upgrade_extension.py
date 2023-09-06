@@ -43,7 +43,7 @@ def update_extension(target, branch=DEFAULT_COOKIECUTTER_BRANCH, interactive=Tru
     package_file = osp.join(target, "package.json")
     setup_file = osp.join(target, "setup.py")
     if not osp.exists(package_file):
-        raise RuntimeError("No package.json exists in %s" % target)
+        raise RuntimeError(f"No package.json exists in {target}")
 
     # Infer the options from the current directory
     with open(package_file) as fid:
@@ -110,7 +110,7 @@ def update_extension(target, branch=DEFAULT_COOKIECUTTER_BRANCH, interactive=Tru
         choice = "y"
     if choice.upper().startswith("Y"):
         warnings.append("Updated scripts in package.json")
-        data.setdefault("scripts", dict())
+        data.setdefault("scripts", {})
         for (key, value) in temp_data["scripts"].items():
             data["scripts"][key] = value
         if "install-ext" in data["scripts"]:
@@ -126,8 +126,8 @@ def update_extension(target, branch=DEFAULT_COOKIECUTTER_BRANCH, interactive=Tru
     with root_jlab_package.open() as fid:
         root_jlab_data = json.load(fid)
 
-    data.setdefault("dependencies", dict())
-    data.setdefault("devDependencies", dict())
+    data.setdefault("dependencies", {})
+    data.setdefault("devDependencies", {})
     for (key, value) in root_jlab_data["resolutions"].items():
         if key in data["dependencies"]:
             data["dependencies"][key] = value.replace("~", "^")
@@ -172,14 +172,11 @@ def update_extension(target, branch=DEFAULT_COOKIECUTTER_BRANCH, interactive=Tru
                 new_data = fid.read()
             if old_data == new_data:
                 continue
-            if interactive:
-                choice = input('overwrite "%s"? [n]: ' % relpath)
-            else:
-                choice = "n"
+            choice = input(f'overwrite "{relpath}"? [n]: ') if interactive else "n"
             if choice.upper().startswith("Y"):
                 shutil.copy(p, file_target)
             else:
-                warnings.append("skipped _temp_extension/%s" % relpath)
+                warnings.append(f"skipped _temp_extension/{relpath}")
 
     # Print out all warnings
     for warning in warnings:

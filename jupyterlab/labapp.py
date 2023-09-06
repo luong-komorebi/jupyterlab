@@ -1,6 +1,7 @@
 # coding: utf-8
 """A tornado based Jupyter lab server."""
 
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -93,7 +94,7 @@ build_flags["splice-source"] = (
 version = __version__
 app_version = get_app_version()
 if version != app_version:
-    version = "%s (dev), %s (app)" % (__version__, app_version)
+    version = f"{__version__} (dev), {app_version} (app)"
 
 buildFailureMsg = """Build failed.
 Troubleshooting: If the build failed due to an out-of-memory error, you
@@ -184,7 +185,7 @@ class LabBuildApp(JupyterApp, DebugLogFileMixin):
         self.log.info("JupyterLab %s", version)
         with self.debug_logging():
             if self.pre_clean:
-                self.log.info("Cleaning %s" % app_dir)
+                self.log.info(f"Cleaning {app_dir}")
                 clean(app_options=app_options)
             self.log.info("Building in %s", app_dir)
             try:
@@ -293,9 +294,9 @@ class LabPathApp(JupyterApp):
     """
 
     def start(self):
-        print("Application directory:   %s" % get_app_dir())
-        print("User Settings directory: %s" % get_user_settings_dir())
-        print("Workspaces directory: %s" % get_workspaces_dir())
+        print(f"Application directory:   {get_app_dir()}")
+        print(f"User Settings directory: {get_user_settings_dir()}")
+        print(f"Workspaces directory: {get_workspaces_dir()}")
 
 
 class LabWorkspaceExportApp(WorkspaceExportApp):
@@ -391,20 +392,17 @@ class LabLicensesApp(LicensesApp):
         return pjoin(self.app_dir, "static")
 
 
-aliases = dict(base_aliases)
-aliases.update(
-    {
-        "ip": "ServerApp.ip",
-        "port": "ServerApp.port",
-        "port-retries": "ServerApp.port_retries",
-        "keyfile": "ServerApp.keyfile",
-        "certfile": "ServerApp.certfile",
-        "client-ca": "ServerApp.client_ca",
-        "notebook-dir": "ServerApp.root_dir",
-        "browser": "ServerApp.browser",
-        "pylab": "ServerApp.pylab",
-    }
-)
+aliases = dict(base_aliases) | {
+    "ip": "ServerApp.ip",
+    "port": "ServerApp.port",
+    "port-retries": "ServerApp.port_retries",
+    "keyfile": "ServerApp.keyfile",
+    "certfile": "ServerApp.certfile",
+    "client-ca": "ServerApp.client_ca",
+    "notebook-dir": "ServerApp.root_dir",
+    "browser": "ServerApp.browser",
+    "pylab": "ServerApp.pylab",
+}
 
 
 class LabApp(NotebookConfigShimMixin, LabServerApp):
@@ -592,9 +590,7 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
 
     @default("themes_dir")
     def _default_themes_dir(self):
-        if self.override_theme_url:
-            return ""
-        return pjoin(self.app_dir, "themes")
+        return "" if self.override_theme_url else pjoin(self.app_dir, "themes")
 
     @default("static_dir")
     def _default_static_dir(self):
@@ -604,15 +600,12 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
     def _default_static_url_prefix(self):
         if self.override_static_url:
             return self.override_static_url
-        else:
-            static_url = "/static/{name}/".format(name=self.name)
-            return ujoin(self.serverapp.base_url, static_url)
+        static_url = "/static/{name}/".format(name=self.name)
+        return ujoin(self.serverapp.base_url, static_url)
 
     @default("theme_url")
     def _default_theme_url(self):
-        if self.override_theme_url:
-            return self.override_theme_url
-        return ""
+        return self.override_theme_url if self.override_theme_url else ""
 
     def initialize_templates(self):
         # Determine which model to run JupyterLab
@@ -652,8 +645,6 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
 
     def initialize_handlers(self):
 
-        handlers = []
-
         # Set config for Jupyterlab
         page_config = self.serverapp.web_app.settings.setdefault("page_config_data", {})
         page_config.setdefault("buildAvailable", not self.core_mode and not self.dev_mode)
@@ -668,8 +659,8 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         # Client-side code assumes notebookVersion is a JSON-encoded string
         page_config["notebookVersion"] = json.dumps(jpserver_version_info)
 
-        self.log.info("JupyterLab extension loaded from %s" % HERE)
-        self.log.info("JupyterLab application directory is %s" % self.app_dir)
+        self.log.info(f"JupyterLab extension loaded from {HERE}")
+        self.log.info(f"JupyterLab application directory is {self.app_dir}")
 
         build_handler_options = AppOptions(
             logger=self.log,
@@ -679,8 +670,7 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         )
         builder = Builder(self.core_mode, app_options=build_handler_options)
         build_handler = (build_path, BuildHandler, {"builder": builder})
-        handlers.append(build_handler)
-
+        handlers = [build_handler]
         errored = False
 
         if self.core_mode:
@@ -693,8 +683,7 @@ class LabApp(NotebookConfigShimMixin, LabServerApp):
         else:
             if self.splice_source:
                 ensure_dev(self.log)
-            msgs = ensure_app(self.app_dir)
-            if msgs:
+            if msgs := ensure_app(self.app_dir):
                 [self.log.error(msg) for msg in msgs]
                 handler = (self.app_url, ErrorHandler, {"messages": msgs})
                 handlers.append(handler)

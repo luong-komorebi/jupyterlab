@@ -211,20 +211,18 @@ class InstallLabExtensionApp(BaseExtensionApp):
         pinned_versions = self.pin.split(",")
         self.extra_args = self.extra_args or [os.getcwd()]
         return any(
-            [
-                install_extension(
-                    arg,
-                    # Pass in pinned alias if we have it
-                    pin=pinned_versions[i] if i < len(pinned_versions) else None,
-                    app_options=AppOptions(
-                        app_dir=self.app_dir,
-                        logger=self.log,
-                        core_config=self.core_config,
-                        labextensions_path=self.labextensions_path,
-                    ),
-                )
-                for i, arg in enumerate(self.extra_args)
-            ]
+            install_extension(
+                arg,
+                # Pass in pinned alias if we have it
+                pin=pinned_versions[i] if i < len(pinned_versions) else None,
+                app_options=AppOptions(
+                    app_dir=self.app_dir,
+                    logger=self.log,
+                    core_config=self.core_config,
+                    labextensions_path=self.labextensions_path,
+                ),
+            )
+            for i, arg in enumerate(self.extra_args)
         )
 
 
@@ -347,7 +345,10 @@ class UpdateLabExtensionApp(BaseExtensionApp):
         )
         if self.all:
             return update_extension(all_=True, app_options=app_options)
-        return any([update_extension(name=arg, app_options=app_options) for arg in self.extra_args])
+        return any(
+            update_extension(name=arg, app_options=app_options)
+            for arg in self.extra_args
+        )
 
 
 class LinkLabExtensionApp(BaseExtensionApp):
@@ -368,7 +369,7 @@ class LinkLabExtensionApp(BaseExtensionApp):
             labextensions_path=self.labextensions_path,
             core_config=self.core_config,
         )
-        return any([link_package(arg, app_options=options) for arg in self.extra_args])
+        return any(link_package(arg, app_options=options) for arg in self.extra_args)
 
 
 class UnlinkLabExtensionApp(BaseExtensionApp):
@@ -382,7 +383,7 @@ class UnlinkLabExtensionApp(BaseExtensionApp):
             labextensions_path=self.labextensions_path,
             core_config=self.core_config,
         )
-        return any([unlink_package(arg, app_options=options) for arg in self.extra_args])
+        return any(unlink_package(arg, app_options=options) for arg in self.extra_args)
 
 
 class UninstallLabExtensionApp(BaseExtensionApp):
@@ -404,10 +405,8 @@ class UninstallLabExtensionApp(BaseExtensionApp):
             core_config=self.core_config,
         )
         return any(
-            [
-                uninstall_extension(arg, all_=self.all, app_options=options)
-                for arg in self.extra_args
-            ]
+            uninstall_extension(arg, all_=self.all, app_options=options)
+            for arg in self.extra_args
         )
 
 
@@ -534,7 +533,7 @@ class LabExtensionApp(JupyterApp):
         # The above should have called a subcommand and raised NoStart; if we
         # get here, it didn't, so we should self.log.info a message.
         subcmds = ", ".join(sorted(self.subcommands))
-        self.exit("Please supply at least one subcommand: %s" % subcmds)
+        self.exit(f"Please supply at least one subcommand: {subcmds}")
 
 
 main = LabExtensionApp.launch_instance
